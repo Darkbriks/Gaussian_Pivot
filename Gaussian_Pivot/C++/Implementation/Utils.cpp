@@ -1,4 +1,4 @@
-﻿#include "Utils.h"
+﻿#include "../Header/Utils.h"
 #include <iostream>
 #include <string>
 #include <map>
@@ -7,7 +7,7 @@
 
 using namespace std;
 
-pivot find_pivot(const int n, map<string, long double> system[], const int line, const string var)
+pivot find_pivot(const int n, linear_system system, const int line, string var)
 /* This function finds the pivot of a system of linear equations.
  * The pivot is the biggest value of a variable in a column in terms of absolute value.
  *
@@ -24,20 +24,20 @@ pivot find_pivot(const int n, map<string, long double> system[], const int line,
 {
     pivot pivot; // Create a pivot
     pivot.line = line; // Set the pivot line to the current line
-    pivot.value = system[line][var]; // Set the pivot value to the value of the variable in the current line
-
+    pivot.value = system.system[line].equation[var]; // Set the pivot value to the value of the variable in the current line
+    
     for (int i = line + 1; i < n; i++) // For each line after the current line
     {
-        if (abs(system[i][var]) > abs(pivot.value)) // If the value of the variable is bigger than the current pivot
+        if (abs(system.system[i].equation[var]) > abs(pivot.value)) // If the value of the variable is bigger than the current pivot
         {
             pivot.line = i; // Update the pivot line
-            pivot.value = system[i][var]; // Update the pivot value
+            pivot.value = system.system[i].equation[var]; // Update the pivot value
         }
     }
     return pivot; // Return the pivot
 }
 
-void swap_lines(map<string, long double> system[], const int line_1, const int line_2)
+void swap_lines(linear_system system, const int line_1, const int line_2)
 /* This function swaps two lines of a system of linear equations.
  *
  * PARAMETERS:
@@ -46,12 +46,12 @@ void swap_lines(map<string, long double> system[], const int line_1, const int l
  *     @param line_2 : the second line to be swapped
  */
 {
-    map<string, long double> temp = system[line_1]; // Create a temporary line
-    system[line_1] = system[line_2]; // Assign the second line to the first line
-    system[line_2] = temp; // Assign the first line to the second line
+    const linear_equation temp = system.system[line_1]; // Create a temporary line
+    system.system[line_1] = system.system[line_2]; // Assign the second line to the first line
+    system.system[line_2] = temp; // Assign the first line to the second line
 }
 
-map<string, long double> divide_line(map<string, long double> equation, const long double divider)
+linear_equation divide_line(linear_equation equation, const long double divider)
 /* This function divides a line of a system of linear equations by a number.
  *
  * EXAMPLE:
@@ -64,14 +64,14 @@ map<string, long double> divide_line(map<string, long double> equation, const lo
  *     @return : the divided line
  */
 {
-    for (auto& var : equation) // For each variable in the line
+    for (auto& var : equation.equation) // For each variable in the line
     {
         var.second /= divider; // Divide the variable by the divider
     }
     return equation; // Return the divided line
 }
 
-map<string, long double> multiply_line(map<string, long double> equation, const long double multiplier)
+linear_equation multiply_line(linear_equation equation, const long double multiplier)
 /* This function multiplies a line of a system of linear equations by a number.
  *
  * EXAMPLE:
@@ -84,14 +84,14 @@ map<string, long double> multiply_line(map<string, long double> equation, const 
  *     @return : the multiplied line
  */
 {
-    for (auto& var : equation) // For each variable in the line
+    for (auto& var : equation.equation) // For each variable in the line
     {
         var.second *= multiplier; // Multiply the variable by the multiplier
     }
     return equation; // Return the multiplied line
 }
 
-map<string, long double> add_lines(map<string, long double> equation_1, map<string, long double> equation_2)
+linear_equation add_lines(linear_equation equation_1, linear_equation equation_2)
 /* This function adds two lines of a system of linear equations.
  *
  * EXAMPLE:
@@ -104,14 +104,14 @@ map<string, long double> add_lines(map<string, long double> equation_1, map<stri
  *     @return : the added line
  */
 {
-    for (auto& var : equation_1) // For each variable in the first line
+    for (auto& var : equation_1.equation) // For each variable in the first line
     {
-        var.second += equation_2[var.first]; // Add the value of the variable in the second line to the value of the variable in the first line
+        var.second += equation_2.equation[var.first]; // Add the value of the variable in the second line to the value of the variable in the first line
     }
     return equation_1; // Return the added line
 }
 
-map<string, long double> subtract_lines(map<string, long double> equation_1, map<string, long double> equation_2)
+linear_equation subtract_lines(linear_equation equation_1, linear_equation equation_2)
 /* This function subtracts two lines of a system of linear equations.
  *
  * EXAMPLE:
@@ -124,14 +124,14 @@ map<string, long double> subtract_lines(map<string, long double> equation_1, map
  *     @return : the subtracted line
  */
 {
-    for (auto& var : equation_1) // For each variable in the first line
+    for (auto& var : equation_1.equation) // For each variable in the first line
     {
-        var.second -= equation_2[var.first]; // Subtract the value of the variable in the second line to the value of the variable in the first line
+        var.second -= equation_2.equation[var.first]; // Subtract the value of the variable in the second line to the value of the variable in the first line
     }
     return equation_1; // Return the subtracted line
 }
 
-map<string, long double> equation_formatting(string equation, const int nb_variables)
+linear_equation equation_formatting(string equation, const int nb_variables)
 /* Function to format a linear equation into a map.
  *
  * The equations must be written in the following form :
@@ -203,12 +203,12 @@ map<string, long double> equation_formatting(string equation, const int nb_varia
         equation += "0"; // Add 0 at the end of the equation
     }
     
-    map<string, long double> variables; // Map to store the variables and their coefficients
+    linear_equation variables; // Map to store the variables and their coefficients
     
     equation.erase(remove(equation.begin(), equation.end(), ' '), equation.end()); // Remove all spaces in the equation
     
     const string independent_term = equation.substr(equation.find("=") + 1); // Get the independent term
-    variables["independent_term"] = stod(independent_term); // Add the independent term to the map
+    variables.equation["independent_term"] = stod(independent_term); // Add the independent term to the map
     
     equation = equation.substr(0, equation.find("=")); // Remove the independent term from the equation
     
@@ -219,7 +219,7 @@ map<string, long double> equation_formatting(string equation, const int nb_varia
         
         if (equation.find(variable) == string::npos) // If the variable is not in the equation
         {
-            variables[variable] = 0; // Add the variable to the map with a coefficient equal to 0
+            variables.equation[variable] = 0; // Add the variable to the map with a coefficient equal to 0
         }
         else // If the variable is in the equation
         {
@@ -230,15 +230,16 @@ map<string, long double> equation_formatting(string equation, const int nb_varia
             
             string coefficient = equation.substr(0, equation.find("x")); // Get the coefficient of the variable
             
-            variables[variable] = stod(coefficient); // Add the variable to the map with its coefficient
+            variables.equation[variable] = stod(coefficient); // Add the variable to the map with its coefficient
             
             equation.erase(0, equation.find("+") + 1); // Remove the variable and its coefficient from the equation
         }
     }
+    variables.nb_variables = nb_variables; // Add the number of variables to the map
     return variables; // Return the formatted equation
 }
 
-vector<map<string, long double>> system_formatting(string list_equations[], const int nb_equations)
+linear_system system_formatting(string list_equations[], const int nb_equations, const int nb_variables)
 /* Function to format a system of linear equations into a vector of maps.
  *
  * The system must in form of an array of strings containing the linear equations
@@ -255,17 +256,19 @@ vector<map<string, long double>> system_formatting(string list_equations[], cons
  *      @return : the formatted system
  */
 {
-    vector<map<string, long double>> system; // Vector to store the formatted equations
+    linear_system linear_system; // Vector to store the formatted equations
     
     for (int i = 0; i < nb_equations; i++) // For each equation
     {
-        map<string, long double> equation = equation_formatting(list_equations[i], nb_equations); // Format the equation using the function equation_formatting
-        system.push_back(equation); // Add the formatted equation to the vector
+        linear_equation equation = equation_formatting(list_equations[i], nb_variables); // Format the equation using the function equation_formatting
+        linear_system.system.push_back(equation); // Add the formatted equation to the vector
     }
-    return system; // Return the formatted system
+    linear_system.nb_equations = nb_equations; // Add the number of equations to the vector
+    linear_system.nb_variables = nb_variables; // Add the number of variables to the vector
+    return linear_system; // Return the formatted system
 }
 
-map<string, long double> solve_system(vector<map<string, long double>> system, const int nb_equations)
+linear_equation solve_system(linear_system system)
 /* Function to solve a system of linear equations.
  *
  * The system must be triangularized before being solved
@@ -279,36 +282,36 @@ map<string, long double> solve_system(vector<map<string, long double>> system, c
  *      @return : the solution of the system
  */
 {
-    map<string, long double> solution; // Map to store the solution
+    linear_equation solution; // Map to store the solution
     
-    for (int i = 0; i < nb_equations; i++) // For each equation
+    for (int i = 0; i < system.nb_equations; i++) // For each equation
     {
         string variable = "a"; // Create the variable name
         variable[0] += i; // Change the variable name according to the coefficient's position in the equation
         
-        solution[variable] = system[i]["independent_term"]; // Add the variable to the map with its coefficient
+        solution.equation[variable] = system.system[i].equation["independent_term"]; // Add the variable to the map with its coefficient
     }
     
-    for (int i = nb_equations - 1; i >= 0; i--) // For each equation
+    for (int i = system.nb_equations - 1; i >= 0; i--) // For each equation
     {
         string variable = "a"; // Create the variable name
         variable[0] += i; // Change the variable name according to the coefficient's position in the equation
         
-        for (int j = nb_equations - 1; j > i; j--) // For each variable
+        for (int j = system.nb_equations - 1; j > i; j--) // For each variable
         {
             string known_variable = "a"; // Create the variable name
             known_variable[0] += j; // Change the variable name according to the coefficient's position in the equation
             
-            system[i]["independent_term"] -= system[i][known_variable] * solution[known_variable]; // Subtract the known variable from the independent term
-            system[i][known_variable] = 0; // Set the coefficient of the known variable to 0
+            system.system[i].equation["independent_term"] -= system.system[i].equation[known_variable] * solution.equation[known_variable]; // Subtract the known variable from the independent term
+            system.system[i].equation[known_variable] = 0; // Set the coefficient of the known variable to 0
         }
-        solution[variable] = system[i]["independent_term"] / system[i][variable]; // Divide the independent term by the coefficient of the variable to get the value of the variable
+        solution.equation[variable] = system.system[i].equation["independent_term"] / system.system[i].equation[variable]; // Divide the independent term by the coefficient of the variable to get the value of the variable
     }
     return solution; // Return the solution
 }
 
-vector<string> enter_system()
-/* This function allows you to enter a system of linear equations and format it into a vector of strings.
+linear_system enter_system()
+/* This function allows you to enter a system of linear equations and format it into a vector of maps.
  *
  * Each equations must be written in the following form :
  *    2a + 3b + 4c = 5
@@ -316,126 +319,62 @@ vector<string> enter_system()
  * For more information, see the documentation of the function equation_formatting
  *
  * PARAMETERS:
- *      @return : the system of linear equations
+ *      @return : the system of linear equations in formating form
  */
 {
-    vector<string> system;
-    string equation;
-    
-    cout << "Enter the system of linear equations, "
-            "one equation per line, and enter an empty line to stop" << endl;
-    
-    while (true) // Loop to enter the equations
-    {
-        getline(cin, equation); // Enter the equation
-        
-        if (equation == "") // If the line is empty
-        {
-            break; // Stop the loop
-        }
-        system.push_back(equation); // Add the equation to the system
-    }
-    return system; // Return the system
-}
+    cout << "Name of the system : "; string name; getline(cin, name);
+    cout << "Number of variables in the system : "; int nb_variables; cin >> nb_variables; cin.ignore();
+    cout << "Enter each equation of the system of linear equations, one equation per line, and enter an empty line to stop" << endl;
 
-vector<map<string, long double>> enter_system_formatting()
-/*
- * Function to enter all coefficients of a system of linear equations and format it into a vector of maps.
- * Each coefficient of equations must be separated by a space.
- * Each equation must be separated by a line break.
- * Enter an empty line to stop.
- *
- *
- * EXAMPLES OF VALID SYSTEMS:
- * 
- *      2 -3 4 5
- *      -4 5 6 7
- *      1 5 8 -7
- *
- *
- * PARAMETERS:
- *
- *      @return : the formatted system
- */
-{
-    vector<map<string, long double>> system;
-    
-    cout << "Enter each coefficient of the system of linear equations, one equation per line, "
-            "and enter an empty line to stop. The coefficients must be separated by a space" << endl;
+    linear_system system; // Vector to store the formatted equations
 
-    while (true) // Loop to enter the equations
+    while (true)
     {
         string equation;
-        getline(cin, equation); // Enter the equation
-        
-        if (equation == "") // If the equation is empty
-        {
-            break; // Stop the loop
-        }
-        
-        map<string, long double> formatted_equation;
-        
-        stringstream ss(equation); // Create a stream to read the equation
-        string coefficient;
-        
-        int i = 0;
-        while (ss >> coefficient) // Loop to read the coefficients of the equation
-        {
-            string variable = "a"; // Create the variable name
-            variable[0] += i; // Change the variable name according to the coefficient's position in the equation
-            
-            formatted_equation[variable] = stod(coefficient); // Add the coefficient to the map
-            i++;
-        }
-        system.push_back(formatted_equation); // Add the equation to the system
+        getline(cin, equation);
+        if (equation == "") {break;}
+        system.system.push_back(equation_formatting(equation, nb_variables));
+        system.nb_equations++;
     }
-    return system; // Return the formatted system
+
+    system.nb_variables = nb_variables;
+    system.name = name;
+    return system;
 }
 
-int compute_nb_equations(string list_equations[])
-/* Function to compute the number of equations in a system.
- *
- * Each equation must be written in a form that can be read by the function equation_formatting
- * For more information, see the documentation of the function equation_formatting
- *
- * EXAMPLES:
- *      compute_nb_equations({"2a + 3b + 4c = 5", "a + 2b + 3c = 4", "a + b + c = 3"}) -> 3
- *      compute_nb_equations({"2a + 3b + 4c = 5", "a + 2b + 3c = 4"}) -> 2
- *      compute_nb_equations({"2a + 3b + 4c = 5"}) -> 1
- *      compute_nb_equations({}) -> 0
- *
- * PARAMETERS:
- *      @param list_equations : the system of linear equations
- *      @return : the number of equations in the system
- */
+void display_equation(linear_equation equation, const bool is_solution)
 {
-    int nb_equations = 0; // Variable to store the number of equations
-
-    while (list_equations[nb_equations] != "") // Loop to count the number of equations
+    if (is_solution)
     {
-        nb_equations++; // Increment the number of equations
+        cout << endl << "Solution : " << endl;
+        for (auto it = equation.equation.begin(); it != equation.equation.end(); it++) // For each variable
+        {
+            cout << it->first << " = " << it->second << endl; // Display the variable and its value
+        }
     }
-    
-    return nb_equations; // Return the number of equations
+    else
+    {
+        for (auto it = equation.equation.begin(); it != equation.equation.end(); it++) // For each variable
+            {
+            if (it->first == "independent_term") // If the variable is the independent term
+                {
+                cout << " = " << it->second; // Display the independent term
+                }
+            else // If the variable is not the independent term
+                {
+                cout << " + " << it->second << it->first; // Display the variable
+                }
+            }
+    }
 }
 
-int compute_nb_equations(vector<map<string, long double>> system)
-/* Function to compute the number of equations in a system.
- *
- * Each equation must be written in a formating form that can be returned by the function formatting_system
- * For more information, see the documentation of the function formatting_system
- *
- * EXAMPLES:
- *      compute_nb_equations({{"a": 2, "b": 3, "c": 4, "independent_term": 5}, {"a": 1, "b": 2, "c": 3, "independent_term": 4}, {"a": 1, "b": 1, "c": 1, "independent_term": 3}}) -> 3
- *      compute_nb_equations({{"a": 2, "b": 3, "c": 4, "independent_term": 5}, {"a": 1, "b": 2, "c": 3, "independent_term": 4}}) -> 2
- *      compute_nb_equations({{"a": 2, "b": 3, "c": 4, "independent_term": 5}}) -> 1
- *      compute_nb_equations({}) -> 0
- *
- * PARAMETERS:
- *      @param system : the system of linear equations
- *      @return : the number of equations in the system
- */
+void display_system(const linear_system system)
 {
-    return static_cast<int>(system.size()); // Return the number of equations)
+    cout << "System " << system.name << " ; " << system.nb_equations << " equations ; " << system.nb_variables << " variables" << endl;
+    for (int i = 0; i < system.nb_equations; i++) // For each equation
+    {
+        cout << "Equation " << i + 1 << " : "; // Display the equation number
+        display_equation(system.system[i]); // Display the equation
+        cout << endl;
+    }
 }
-
